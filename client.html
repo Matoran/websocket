@@ -3,6 +3,7 @@
 		<script src="GameManager.js"></script>
 		<script src="client.js"></script>
 		<script type="text/javascript">
+			var players = [];
 
 		//Param isLocalPlayer => True to update the local player, false to update other players
 		Player.prototype.say = function(isLocalPlayer,msg){
@@ -28,6 +29,7 @@
 				///////////////////
 				//CODE TO INSERT HERE
 				///////////////////
+				connection.send(JSON.stringify(this));
 
 			}
 			if(this.msg){
@@ -100,9 +102,20 @@
 			console.log("Message in : ")
 			console.log(message)
 
+			switch (message.type){
+				case 'newpos':
+
+				    break;
+				case 'newplayer':
+				    players.push(new Player(message.name, message.pos))
+				    break;
+			}
+
+
 			///////////////////
 			//CODE TO INSERT HERE
 			///////////////////
+
 		}
 
 		//Functions

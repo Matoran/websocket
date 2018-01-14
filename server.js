@@ -36,23 +36,33 @@ wsServer = new WebSocketServer({
     httpServer: server
 })
 
+var i = 0;
+var clients = [];
+
 // WebSocket server
 wsServer.on('request', function(request) {
     var connection = request.accept(null, request.origin)
-
-    	///////////////////
-	//CODE TO INSERT HERE
-	///////////////////
+	var id = i++;
+    clients.push(connection);
+    clients.forEach(function(client){
+    	var message = {
+    		type: 'newplayer'
+		};
+        client.send(JSON.stringify(message));
+    });
 
     connection.on('message', function(message) {
 		if(message.type == 'utf8')
 			message = JSON.parse(message.utf8Data);
 		else
 			return
-
-		///////////////////
-		//CODE TO INSERT HERE
-		///////////////////
+		message.type = 'newpos';
+        clients.forEach(function(client){
+        	if(client !== connection){
+                client.send(JSON.stringify(message));
+            }
+        });
+		console.log(message);
 
     })
 

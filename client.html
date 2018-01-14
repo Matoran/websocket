@@ -3,55 +3,62 @@
 		<script src="GameManager.js"></script>
 		<script src="client.js"></script>
 		<script type="text/javascript">
-			var players = [];
+
 
 		//Param isLocalPlayer => True to update the local player, false to update other players
 		Player.prototype.say = function(isLocalPlayer,msg){
-			this.msg = new TextBubble(msg,300,this)
+			this.msg = new TextBubble(msg,300,this);
 			if(isLocalPlayer){
 				///////////////////
 				//CODE TO INSERT HERE
 				///////////////////
+                var message = {};
+                message.type = 'message';
+                message.text = msg;
+                connection.send(JSON.stringify(message));
 			}
-		}
+		};
 		
 		Player.prototype.update = function(isLocalPlayer){
 			if(document.activeElement == document.body && isLocalPlayer && (_PRESSED[68] || _PRESSED[65] || _PRESSED[83] || _PRESSED[87])){
 				if(_PRESSED[68])
-					this.pos.x+=this.speed
+					this.pos.x+=this.speed;
 				else if(_PRESSED[65])
-					this.pos.x-=this.speed
+					this.pos.x-=this.speed;
 				if(_PRESSED[87])
-					this.pos.y-=this.speed
+					this.pos.y-=this.speed;
 				else if(_PRESSED[83])
-					this.pos.y+=this.speed
+					this.pos.y+=this.speed;
 				
 				///////////////////
 				//CODE TO INSERT HERE
 				///////////////////
-				connection.send(JSON.stringify(this));
+				var message = {};
+				message.type = 'newpos';
+				message.pos = this.pos;
+				connection.send(JSON.stringify(message));
 
 			}
 			if(this.msg){
-				this.msg.ttl--
+				this.msg.ttl--;
 				if(this.msg.ttl <= 0)
 					this.msg = undefined
 			}
-		}
+		};
 
 
 		//Globals
-		var CANVAS = document.createElement("canvas")
-		CANVAS.width = 600
-		CANVAS.height = 600
-		CANVAS.style.border = "1px solid black"
-		var CONTEXT = CANVAS.getContext("2d")
-		CONTEXT.textBaseline = "middle"
-		CONTEXT.textAlign = "center"
+		var CANVAS = document.createElement("canvas");
+		CANVAS.width = 600;
+		CANVAS.height = 600;
+		CANVAS.style.border = "1px solid black";
+		var CONTEXT = CANVAS.getContext("2d");
+		CONTEXT.textBaseline = "middle";
+		CONTEXT.textAlign = "center";
 		CONTEXT.font="15px Georgia";
 
-		var TEXT_INPUT = document.createElement("input")
-		TEXT_INPUT.type = "text"
+		var TEXT_INPUT = document.createElement("input");
+		TEXT_INPUT.type = "text";
 
 
 		//Gestion de l'envoi de messages
@@ -69,28 +76,33 @@
 					document.body.focus();
 				}
 			}
-		})
+		});
 
-		var connection = new WebSocket('ws://'+window.location.host)
+		var connection = new WebSocket('ws://'+window.location.host);
 		
 		///////////////////
 		//CODE TO INSERT HERE
 		///////////////////
+        var players = [];
 
 		connection.onopen = function () {
 			
-			var name = ''
+			var name = '';
 			while(name == '')
-				name = prompt("Choose a name", "defaultname")
+				name = prompt("Choose a name", "defaultname");
 			
-			pos = {"x" : Math.random()*CANVAS.width, "y" : Math.random()*CANVAS.height}
-			player = new Player(name,pos)
-			init()
+			pos = {"x" : Math.random()*CANVAS.width, "y" : Math.random()*CANVAS.height};
+			player = new Player(name,pos);
+			init();
 			
 			///////////////////
 			//CODE TO INSERT HERE
 			///////////////////
-		}
+			var message = {};
+			message.type = 'newplayer';
+			message.player = player;
+			connection.send(JSON.stringify(message));
+		};
 
 		connection.onmessage = function (message) {
 			try {
@@ -99,45 +111,47 @@
 				console.log('Invalid JSON: ', message.data);
 				return
 			}
-			console.log("Message in : ")
-			console.log(message)
-
-			switch (message.type){
-				case 'newpos':
-
-				    break;
-				case 'newplayer':
-				    players.push(new Player(message.name, message.pos))
-				    break;
-			}
-
-
 			///////////////////
 			//CODE TO INSERT HERE
 			///////////////////
-
-		}
+            switch (message.type){
+                case 'newpos':
+                    players[message.id].pos = message.pos;
+                    break;
+                case 'newplayer':
+                    players.push(new Player(message.player.name, message.player.pos));
+                    break;
+                case 'deleteplayer':
+                    console.log(players);
+                    players.splice(message.id, 1);
+                    console.log(players);
+                    break;
+                case 'message':
+                    players[message.id].say(false, message.text);
+                    break;
+            }
+		};
 
 		//Functions
 		var update = function(){
-			player.update(true)
+			player.update(true);
 			players.forEach(function(p){
 				p.update(false)
 			})
-		}
+		};
 
 		var draw = function(){
-			CONTEXT.clearRect(0,0,CANVAS.width,CANVAS.height)
+			CONTEXT.clearRect(0,0,CANVAS.width,CANVAS.height);
 			players.forEach(function(p){
 				p.draw()
-			})
+			});
 			player.draw()
-		}
+		};
 		function init(){
-			document.body.appendChild(CANVAS)
-			document.body.appendChild(TEXT_INPUT)
-			GAME.setDrawFunction(draw)
-			GAME.setUpdateFunction(update)
+			document.body.appendChild(CANVAS);
+			document.body.appendChild(TEXT_INPUT);
+			GAME.setDrawFunction(draw);
+			GAME.setUpdateFunction(update);
 			GAME.init()
 		}
 		</script>

@@ -59,11 +59,7 @@ wsServer.on('request', function(request) {
                     messageOldPlayer.player = client.player;
                 	connection.send(JSON.stringify(messageOldPlayer));
                     client.send(JSON.stringify(message));
-                }else{
-                	let message = {};
-                	message.type = 'id';
-                	message.id = connection.id;
-				}
+                }
             });
 		}else if(message.type === 'newpos'){
 			connection.player.pos = message.pos;
